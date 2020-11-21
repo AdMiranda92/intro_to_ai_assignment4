@@ -239,18 +239,46 @@ def player_setup(board):
 
 
 def print_game(board):
+    """
+    this will print out the board state (without identifying information)
+    """
     for row in board:
         for node in row:
             node.print_node()
 
 
 def print_setup(board):
+    """
+    This will print out the board state with identifying information
+    """
     for row in board:
         for node in row:
             node.view_info()
 
+def player_turn(board):
+    """
+    Takes the players turn, returns false if the location hit does not contain
+    a battleship, true otherwise
+    """
+    print("Player's turn, where would you like to hit?")
+    x_coord = input("Enter X Coordinate: ")
+    y_coord = input("Enter Y Coordinate: ")
+
+    while(board[x_coord][y_coord].hit):
+        print("That location has already been hit - please select a different location")
+        x_coord = input("Enter X Coordinate: ")
+        y_coord = input("Enter Y Coordinate: ")
+    board[x_coord][y_coord].hit = True
+    if(board[x_coord][y_coord.part_of_ship]):
+        print("HIT")
+        return True
+    else:
+        print("MISS")
+        return False
 
 def main():
+    player_score = 0
+    ai_score = 0
     player_board = []
     ai_board = []
     ai_player = AI()
