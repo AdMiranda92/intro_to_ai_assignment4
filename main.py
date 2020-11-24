@@ -101,6 +101,87 @@ class AI:
                 node.prob = 0
                 
     
+        for row in board:
+            for node in row:
+                if node.hit == True and node.part_of_ship == True:
+                        x = node.x_coord
+                        y = node.y_coord
+                        n = False
+                        s = False
+                        e = False
+                        w = False
+                        try:
+                            if(not board[x-1][y].hit):
+                                n = True
+                        except:
+                            pass
+
+                        try:
+                            if(not board[x+1][y].hit):
+                                s = True
+                        except:
+                            pass
+
+                        try:
+                            if(not board[x][y+1].hit):
+                                e = True
+                        except:
+                            pass
+
+                        try:
+                            if(not board[x][y-1].hit):
+                                w = True
+                        except:
+                            pass
+                        
+                        if(n):
+                            x -= 1
+                            while(x >= 0):
+                                if board[x][y].hit and board[x][y].part_of_ship:
+                                    x -= 1
+                                elif board[x][y].hit and not board[x][y].part_of_ship:
+                                    break
+                                else:
+                                    return (board[x][y].x_coord, board[x][y].y_coord)
+
+                        if(s):
+                            x = node.x_coord
+                            y = node.y_coord
+                            x += 1
+                            while(x <= 9):
+                                if board[x][y].hit and board[x][y].part_of_ship:
+                                    x += 1
+                                elif board[x][y].hit and not board[x][y].part_of_ship:
+                                    break
+                                else:
+                                    return (board[x][y].x_coord, board[x][y].y_coord)
+
+                        if(e and not (n or s)):
+                            x = node.x_coord
+                            y = node.y_coord
+                            y += 1
+                            while(y <= 9):
+                                if board[x][y].hit and board[x][y].part_of_ship:
+                                    y += 1
+                                elif board[x][y].hit and not board[x][y].part_of_ship:
+                                    break
+                                else:
+                                    return (board[x][y].x_coord, board[x][y].y_coord)
+                        
+                        if(w and not(n or s)):
+                            x = node.x_coord
+                            y = node.y_coord
+                            y -= 1
+                            while(y >= 0):
+                                if board[x][y].hit and board[x][y].part_of_ship:
+                                    y -= 1
+                                elif board[x][y].hit and not board[x][y].part_of_ship:
+                                    break
+                                else:
+                                    return (board[x][y].x_coord, board[x][y].y_coord) 
+
+
+        
         for ship in ships:
             for row in board:
                 for node in row:
