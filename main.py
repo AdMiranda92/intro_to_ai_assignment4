@@ -1,5 +1,6 @@
 import copy
 import random
+import time
 
 class Node:
     def __init__(self, x_coord=None, y_coord=None, probability=None, owner=None):
@@ -24,6 +25,18 @@ class Node:
         if self.y_coord == 9:
             print("\n")
 
+    def view_prob(self):
+        if self.hit == False:
+            print(f"[{self.prob:02d}]", end='')
+        elif self.hit == True and self.part_of_ship == True:
+            print("[HT]", end='')
+        else:
+            print("[MS]", end='')
+        
+        if self.y_coord == 9:
+            print("\n")
+            
+            
     def view_info(self):
         if self.part_of_ship == False:
             print("[ ]", end='')
@@ -75,8 +88,131 @@ class AI:
 
             set_ship(board, ship, direction, [random_x,random_y], human_player=False)
 
-            
+    def best_move(self, board):
+        """
+        This function returns a tuple containing the x and y coords of the node with the
+        highest probability density
+        """
+        
+        
+        ships = [5,4,3,3,2]
+        for row in board:
+            for node in row:
+                node.prob = 0
+                
+    
+        for ship in ships:
+            for row in board:
+                for node in row:
+                    if node.hit == True and node.part_of_ship == False:
+                        continue
+                    else:
+                        legal_placement(board, ship, [node.x_coord, node.y_coord])
+                    
+        # return coords of the highest probability node
+        highest_node = board[0][0]
+        for row in board:
+            for node in row:
+                if node.prob > highest_node.prob:
+                    highest_node = node
+                if node.prob == highest_node.prob:
+                    switch = random.randint(1,2)
+                    if switch == 1:
+                        highest_node = node
+        
+        return (highest_node.x_coord, highest_node.y_coord)
+    
+    def AI_turn(self, board):
+        """
+        Executes AI turn, returns true if AI hit a battleship
+        false otherwise
+        """
+        highest_node = self.best_move(board)
+        board[highest_node[0]][highest_node[1]].hit = True
+        print(f"ENEMY CHOOSES [{highest_node[0]}, {highest_node[1]}]")
+        if board[highest_node[0]][highest_node[1]].part_of_ship:
+            print("THE ENEMY HAS HIT YOUR BATTLESHIP")
+            return True
+        else:
+            print("THE ENEMY MISSED")
+            return False
 
+
+def legal_placement(board, ship_size, coords):
+    """
+    Function for the AI to rank remaining nodes in order to choose the best
+    next move, function returns a value density
+    """
+    # pass this check if the north direction does not contain enough spaces for the ship size
+    legal_ship_direction = True
+    if coords[0]-ship_size < 0:
+        legal_ship_direction = False
+    else: 
+        for i in range(0, ship_size):
+            if board[coords[0]-i][coords[1]].hit == True and board[coords[0]-i][coords[1]].part_of_ship == False:
+                legal_ship_direction = False
+    
+    if legal_ship_direction:
+        for i in range(0,ship_size):
+            if(board[coords[0]-i][coords[1]].hit == False):
+                board[coords[0]-i][coords[1]].prob += 1
+            elif(board[coords[0]-i][coords[1]].hit == True and board[coords[0]-i][coords[1]].part_of_ship == True):
+                board[coords[0]-i][coords[1]].prob += 1   
+
+
+    # pass this check if the east direction does not contain enough spaces for the ship size
+    legal_ship_direction = True
+    if coords[1]+ship_size > 9:
+        legal_ship_direction = False
+    else:  
+        for i in range(00, ship_size):
+            if(board[coords[0]][coords[1]+i].hit == True and board[coords[0]][coords[1]+i].part_of_ship == False):
+                legal_ship_direction = False
+    
+    if legal_ship_direction:
+        for i in range(0,ship_size):
+            if(board[coords[0]][coords[1]+i].hit == False):
+                board[coords[0]][coords[1]+i].prob += 1
+            elif(board[coords[0]][coords[1]+i].hit == True and board[coords[0]][coords[1]+i].part_of_ship == True):
+                board[coords[0]-i][coords[1]+i].prob += 1
+            else:
+                break
+
+    # pass this check if the south direction does not contain enough spaces for the ship size
+    legal_ship_direction = True
+    if coords[0]+ship_size > 9:
+        legal_ship_direction = False
+    else:    
+        for i in range(0, ship_size):
+            if(board[coords[0]+i][coords[1]].hit == True and board[coords[0]+i][coords[1]].part_of_ship == False):
+                legal_ship_direction = False
+        
+    if legal_ship_direction:
+        for i in range(0,ship_size):
+            if(board[coords[0]+i][coords[1]].hit == False):
+                board[coords[0]+i][coords[1]].prob += 1
+            elif(board[coords[0]+i][coords[1]].hit == True and board[coords[0]+i][coords[1]].part_of_ship == True):
+                board[coords[0]+i][coords[1]].prob += 1
+            else:
+                break
+
+    # pass this check if the west direction does not contain enough spaces for the ship size
+    legal_ship_direction = True
+    if coords[1]-ship_size < 0:
+        legal_ship_direction = False
+    else:    
+        for i in range(0, ship_size):
+            if(board[coords[0]][coords[1]-i].hit == True and board[coords[0]][coords[1]-i].part_of_ship == True):
+                legal_ship_direction = False
+        
+    if legal_ship_direction:
+        for i in range(0,ship_size):
+            if(board[coords[0]][coords[1]-i].hit == False):
+                board[coords[0]][coords[1]-i].prob += 1
+            elif(board[coords[0]][coords[1]-i].hit == True and board[coords[0]][coords[1]-i].part_of_ship == True):
+                board[coords[0]][coords[1]-i].prob += 1
+            else:
+                break
 
 def legal_ship_direction(board, ship_size, direction, coords):
     """
@@ -238,6 +374,49 @@ def player_setup(board):
         counter += 1
 
 
+def player_turn(board):
+    """
+    Takes the players turn, returns false if the location hit does not contain
+    a battleship, true otherwise
+    """
+    print("Player's turn, where would you like to hit?")
+    x_coord = int(input("Enter X Coordinate: "))
+    y_coord = int(input("Enter Y Coordinate: "))
+
+    while(board[x_coord][y_coord].hit):
+        print("That location has already been hit - please select a different location")
+        x_coord = int(input("Enter X Coordinate: "))
+        y_coord = int(input("Enter Y Coordinate: "))
+    board[x_coord][y_coord].hit = True
+    if(board[x_coord][y_coord].part_of_ship):
+        print("YOU HIT AN ENEMY BATTLESHIP")
+        return True
+    else:
+        print("YOU MISSED")
+        return False
+
+def single_player_game(board):
+    ai_player = AI()
+    ai_score = 0
+    turns = 0
+    while(ai_score < 17):
+        ai_takes_turn = ai_player.AI_turn(board)
+        turns += 1
+        show_ai_view(board)
+        x = input("Press any key to continue... ")
+        if x == 'q':
+            quit()
+        if ai_takes_turn:
+            ai_score += 1
+            
+    print(f"The AI has taken {turns} turns to complete the game.")
+
+def show_ai_view(board):
+    for row in board:
+        for node in row:
+            node.view_prob()
+            
+            
 def print_game(board):
     for row in board:
         for node in row:
@@ -249,11 +428,58 @@ def print_setup(board):
         for node in row:
             node.view_info()
 
+def play_game(player_board, ai_board):
+    ai_player = AI()
+    player_score = 0
+    ai_score = 0
+    
+    # setup player board and ai_board
+    player_setup(player_board)
+    ai_player.set_ai_ships(ai_board)
 
+    # print the initial boards for viewing
+    print("INITIAL PLAYER BOARD")
+    print_setup(player_board)
+
+    print("INITIAL AI BOARD")
+    print_setup(ai_board)
+    
+    while(player_score != 17 and ai_score != 17):
+        print("ENEMY BOARD")
+        print_game(ai_board)
+        player_takes_turn = player_turn(ai_board)
+        print_game(ai_board)
+        if(player_takes_turn):
+            player_score += 1
+        
+        x = input("Press any key to continue... ")
+        if(x == 'q'):
+            quit()
+        
+        if(x == 'ai'):
+            show_ai_view(player_board)
+            time.sleep(5)
+            x = input("Press any key to continue... ")
+        
+        
+        ai_takes_turn = ai_player.AI_turn(player_board)
+        print_game(player_board)
+        if(ai_takes_turn):
+            ai_score += 1
+            
+        x = input("Press any key to continue... ")
+        if(x == 'q'):
+            quit()
+        
+        if(x == 'ai'):
+            show_ai_view(player_board)
+            time.sleep(5)
+            x = input("Press any key to continue... ")
+        
+    
 def main():
     player_board = []
     ai_board = []
-    ai_player = AI()
     for i in range(10):
         row = []
         for j in range(10):
@@ -261,15 +487,16 @@ def main():
             row.append(new_node)
         player_board.append(copy.deepcopy(row))
         ai_board.append(copy.deepcopy(row))
-
-    player_setup(player_board)
-    ai_player.set_ai_ships(ai_board)
-
-    print("INITIAL PLAYER BOARD")
-    print_setup(player_board)
-
-    print("INITIAL AI BOARD")
-    print_setup(ai_board)
+    print("What game would you like to play:")
+    print("1) Two players\n2) Single player (AI only)")
+    game = int(input("Selection: "))
+    if game == 1:
+        play_game(player_board, ai_board)
+    else:
+        ai_player = AI()
+        ai_player.set_ai_ships(player_board)
+        print_setup(player_board)
+        single_player_game(player_board)
 
 
 main()
